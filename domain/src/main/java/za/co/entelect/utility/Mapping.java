@@ -3,6 +3,7 @@ package za.co.entelect.utility;
 import za.co.entelect.dto.*;
 import za.co.entelect.entity.AccountEntity;
 import za.co.entelect.entity.CustomerEntity;
+import za.co.entelect.entity.ReconciliationTransactionEntity;
 import za.co.entelect.entity.TransactionEntity;
 
 public class Mapping {
@@ -38,6 +39,21 @@ public class Mapping {
                 .accountNumber(accountEntity.getAccountNumber())
                 .accountType(accountEntity.getAccountType())
                 .branchCode(accountEntity.getBranchCode())
+                .build();
+    }
+
+    public static ReconciliationTransaction toReconciliationTransaction(ReconciliationTransactionEntity entity) {
+        return ReconciliationTransaction.builder()
+                .reconciliationTransactionID(entity.getReconciliationTransactionID())
+                .accountNumber(entity.getAccountNumber())
+                .accountType(entity.getAccountType())
+                .branchCode(entity.getBranchCode())
+                .amount(entity.getAmount())
+                .transactionReference(entity.getTransactionReference())
+                .transactionType(entity.getTransactionType())
+                .transactionDate(entity.getTransactionDate())
+                .counterpartyBankName(entity.getCounterpartyBankName())
+                .status(entity.getStatus())
                 .build();
     }
 

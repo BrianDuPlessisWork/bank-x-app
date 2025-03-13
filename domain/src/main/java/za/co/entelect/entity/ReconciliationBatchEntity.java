@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -20,7 +20,7 @@ public class ReconciliationBatchEntity {
     private String status;
 
     @Column(name = "submissionDate", nullable = false)
-    private LocalDate submissionDate;
+    private LocalDateTime submissionDate;
 
     @Column(name = "processingBank", nullable = false)
     private String processingBank;

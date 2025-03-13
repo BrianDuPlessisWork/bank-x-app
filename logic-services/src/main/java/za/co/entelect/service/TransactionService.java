@@ -36,6 +36,10 @@ public class TransactionService {
         this.notificationService = notificationService;
     }
 
+    public Optional<TransactionEntity> findByTransactionReference(String transactionReference){
+        return transactionRepository.findByTransactionReference(transactionReference);
+    }
+
     public List<Transaction> getTransactionsByAccountNumber(String accountNumber, Customer customer) throws AccessDeniedException {
         Account account = accountService.findAccountByAccountNumber(accountNumber);
 
