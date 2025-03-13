@@ -1,7 +1,11 @@
 package za.co.entelect.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "Customer")
 public class CustomerEntity {

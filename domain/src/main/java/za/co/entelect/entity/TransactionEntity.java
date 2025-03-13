@@ -1,9 +1,14 @@
 package za.co.entelect.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.time.LocalDate;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "Transaction")
 public class TransactionEntity {
@@ -16,29 +21,26 @@ public class TransactionEntity {
     @JoinColumn(name = "accountID", nullable = false)
     private AccountEntity account;
 
-    @ManyToOne
-    @JoinColumn(name = "processorID", nullable = false)
-    private TransactionProcessorEntity transactionProcessor;
+    @Column(name = "transactionReference", unique = true, nullable = false, length = 50)
+    private String transactionReference;
 
-    @ManyToOne
-    @JoinColumn(name = "counterpartyID", nullable = false)
-    private CounterpartyEntity counterparty;
-
-    @Column(name = "transactionType", nullable = false)
+    @Column(name = "transactionType", nullable = false, length = 50)
     private String transactionType;
 
     @Column(name = "amount", nullable = false)
-    private Double amount;
+    private BigDecimal amount;
 
-    @Column(name = "transactionFee", nullable = false)
-    private Double transactionFee;
+    @Column(name = "transactionDate")
+    private LocalDateTime transactionDate;
 
-    @Column(name = "transactionDate", nullable = false)
-    private LocalDate transactionDate;
+    @Column(name = "transactionDescription", nullable = false, length = 255)
+    private String transactionDescription;
 
-    @Column(name = "status", nullable = false)
-    private String status;
+    @Column(name = "processingBank", nullable = false, length = 255)
+    private String processingBank;
 
-    @Column(name = "reference", nullable = false)
-    private String reference;
+    @Column(name = "counterpartyBankName", nullable = false, length = 255)
+    private String counterpartyBankName;
 }
+
+

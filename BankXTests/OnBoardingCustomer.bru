@@ -1,0 +1,21 @@
+meta {
+  name: OnBoardingCustomer
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8080/api/customer/onboard
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "John",
+    "surname": "Doe",
+    "identificationNumber": "9201015012087",
+    "emailAddress": "john.doe@example.com",
+    "cellphoneNumber": "0731234567"
+  }
+}

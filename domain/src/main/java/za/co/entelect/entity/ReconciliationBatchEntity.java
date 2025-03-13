@@ -1,9 +1,13 @@
 package za.co.entelect.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "ReconciliationBatch")
 public class ReconciliationBatchEntity {
@@ -12,16 +16,12 @@ public class ReconciliationBatchEntity {
     @Column(name = "reconciliationBatchID")
     private Long reconciliationBatchID;
 
-    @ManyToOne
-    @JoinColumn(name = "processorID", nullable = false)
-    private TransactionProcessorEntity transactionProcessor;
-
     @Column(name = "status", nullable = false)
     private String status;
 
-    @Column(name = "totalTransactions", nullable = false)
-    private Integer totalTransactions;
-
     @Column(name = "submissionDate", nullable = false)
     private LocalDate submissionDate;
+
+    @Column(name = "processingBank", nullable = false)
+    private String processingBank;
 }

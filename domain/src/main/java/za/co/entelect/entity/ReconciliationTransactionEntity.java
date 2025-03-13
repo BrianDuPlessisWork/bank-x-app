@@ -1,9 +1,14 @@
 package za.co.entelect.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.time.LocalDate;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "ReconciliationTransaction")
 public class ReconciliationTransactionEntity {
@@ -16,34 +21,31 @@ public class ReconciliationTransactionEntity {
     @JoinColumn(name = "reconciliationBatchID", nullable = false)
     private ReconciliationBatchEntity reconciliationBatch;
 
-    @Column(name = "accountNumber", nullable = false)
+    @Column(name = "accountNumber", nullable = false, length = 50)
     private String accountNumber;
 
-    @Column(name = "accountType", nullable = false)
+    @Column(name = "accountType", nullable = false, length = 50)
     private String accountType;
 
-    @Column(name = "branchCode", nullable = false)
+    @Column(name = "branchCode", nullable = false, length = 50)
     private String branchCode;
 
     @Column(name = "amount", nullable = false)
-    private Double amount;
+    private BigDecimal amount;
 
-    @Column(name = "transactionType", nullable = false)
+    @Column(name = "transactionReference", nullable = false, length = 50)
+    private String transactionReference;
+
+    @Column(name = "transactionType", nullable = false, length = 50)
     private String transactionType;
 
     @Column(name = "transactionDate", nullable = false)
-    private LocalDate transactionDate;
+    private LocalDateTime transactionDate;
 
-    @Column(name = "counterPartyAccountNumber", nullable = false)
-    private String counterPartyAccountNumber;
+    @Column(name = "counterpartyBankName", nullable = false, length = 255)
+    private String counterpartyBankName;
 
-    @Column(name = "counterPartyAccountType", nullable = false)
-    private String counterPartyAccountType;
-
-    @Column(name = "counterPartyBranchCode", nullable = false)
-    private String counterPartyBranchCode;
-
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, length = 50)
     private String status;
-
 }
+
