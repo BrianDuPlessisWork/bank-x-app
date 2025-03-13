@@ -9,7 +9,7 @@ public class Mapping {
 
     public static Transaction toTransaction(TransactionEntity transactionEntity){
         return Transaction.builder()
-                .transactionID(transactionEntity.getTransactionID())
+//                .transactionID(transactionEntity.getTransactionID())
                 .account(toTransactionAccount(transactionEntity.getAccount()))
                 .amount(transactionEntity.getAmount())
                 .transactionReference(transactionEntity.getTransactionReference())

@@ -17,5 +17,4 @@ public class Account {
     private String branchCode;
     private BigDecimal balance;
     private AccountCustomer customer;
-    private List<TransactionEntity> transactions;
 }

@@ -29,7 +29,7 @@ public class TransactionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Transaction>> getTransactionsByAccountAndDateRange(
+    public ResponseEntity<List<Transaction>> getTransactionsByAccountNumber(
             @RequestParam(name = "accountNumber") String accountNumber,
             @RequestParam(name = "customerID") Long customerID) throws AccessDeniedException {
 

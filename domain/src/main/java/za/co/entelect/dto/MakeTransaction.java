@@ -2,11 +2,12 @@ package za.co.entelect.dto;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
 @Data
-@Builder
+@NoArgsConstructor
 public class MakeTransaction {
     private String payFromAccountNumber;
     private String payToAccountNumber;

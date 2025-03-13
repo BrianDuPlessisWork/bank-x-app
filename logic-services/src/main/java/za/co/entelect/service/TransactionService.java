@@ -1,5 +1,6 @@
 package za.co.entelect.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -205,7 +206,7 @@ public class TransactionService {
         transaction.setTransactionReference(transactionDetails.getPayToAccountNumber());
         transaction.setTransactionDate(timestamp);
         transaction.setProcessingBank(transactionDetails.getProcessingBank());
-        transaction.setCounterpartyBankName(transaction.getCounterpartyBankName());
+        transaction.setCounterpartyBankName(transactionDetails.getCounterpartyBank());
 
         account = addTransactionToAccount(account, transaction);
         account.setBalance(account.getBalance().subtract(transaction.getAmount()));
@@ -227,7 +228,7 @@ public class TransactionService {
         transaction.setTransactionReference(transactionDetails.getPayFromAccountNumber());
         transaction.setTransactionDate(timestamp);
         transaction.setProcessingBank(transactionDetails.getProcessingBank());
-        transaction.setCounterpartyBankName(transaction.getCounterpartyBankName());
+        transaction.setCounterpartyBankName(transactionDetails.getCounterpartyBank());
 
         account = addTransactionToAccount(account, transaction);
         account.setBalance(account.getBalance().add(transaction.getAmount()));
@@ -266,7 +267,7 @@ public class TransactionService {
     private Optional<AccountEntity> findAccountSafely(Supplier<AccountEntity> accountSupplier) {
         try {
             return Optional.of(accountSupplier.get());
-        } catch (IllegalArgumentException e) {
+        } catch (EntityNotFoundException e) {
             return Optional.empty();
         }
     }

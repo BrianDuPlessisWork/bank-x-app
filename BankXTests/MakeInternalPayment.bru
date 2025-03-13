@@ -1,0 +1,22 @@
+meta {
+  name: MakeInternalPayment
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://localhost:8080/api/transactions/internal/payment/4
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "payFromAccountNumber": "74288767352",
+    "payToAccountNumber": "23211776388",
+    "processingBank": "BANK_X",
+    "counterpartyBank": "BANK_X",
+    "description": "INTERNAL_PAYMENT",
+    "amount": 50.00
+  }
+}

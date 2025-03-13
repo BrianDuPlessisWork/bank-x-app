@@ -32,7 +32,7 @@ public class CustomerController {
                 .body(newCustomer);
     }
 
-    @GetMapping("/api/accounts/{customerId}")
+    @GetMapping("/accounts/{customerId}")
     public ResponseEntity<List<Account>> getCustomerAccounts(@PathVariable(name="customerId") Long customerId){
         List<Account> accounts = accountService.findAccountsByCustomerId(customerId);
         return ResponseEntity.ok(accounts);

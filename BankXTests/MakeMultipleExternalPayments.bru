@@ -1,0 +1,40 @@
+meta {
+  name: MakeMultipleExternalPayments
+  type: http
+  seq: 8
+}
+
+post {
+  url: http://localhost:8080/api/transactions/external/payment/multiple
+  body: json
+  auth: none
+}
+
+body:json {
+  [
+    {
+      "payFromAccountNumber": "12345678901234",
+      "payToAccountNumber": "60234648962",
+      "processingBank": "BANK_Z",
+      "counterpartyBank": "BANK_Z",
+      "description": "EXTERNAL_PAYMENT",
+      "amount": 1250.75
+    },
+    {
+      "payFromAccountNumber": "12345678901234",
+      "payToAccountNumber": "60234648962",
+      "processingBank": "BANK_Z",
+      "counterpartyBank": "BANK_Z",
+      "description": "EXTERNAL_PAYMENT",
+      "amount": 89.99
+    },
+    {
+      "payFromAccountNumber": "87654321098765",
+      "payToAccountNumber": "60234648962",
+      "processingBank": "BANK_Z",
+      "counterpartyBank": "BANK_Z",
+      "description": "EXTERNAL_PAYMENT",
+      "amount": 399.50
+    }
+  ]
+}

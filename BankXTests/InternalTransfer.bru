@@ -4,8 +4,19 @@ meta {
   seq: 4
 }
 
-get {
-  url: http://localhost:8080/api/transaction/internal/transfer
-  body: none
+post {
+  url: http://localhost:8080/api/transactions/internal/transfer/3
+  body: json
   auth: none
+}
+
+body:json {
+  {
+    "payFromAccountNumber": "68018864579",
+    "payToAccountNumber": "60234648962",
+    "processingBank": "BANK_X",
+    "counterpartyBank": "BANK_X",
+    "description": "INTERNAL_TRANSFER",
+    "amount": 100.00
+  }
 }

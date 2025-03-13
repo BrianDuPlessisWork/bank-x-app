@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class Transaction {
-    private Long transactionID;
+//    private Long transactionID;
     private TransactionAccount account;
     private BigDecimal amount;
     private String transactionReference;

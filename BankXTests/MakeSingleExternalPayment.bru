@@ -1,0 +1,22 @@
+meta {
+  name: MakeSingleExternalPayment
+  type: http
+  seq: 7
+}
+
+post {
+  url: http://localhost:8080/api/transactions/external/payment/single
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "payFromAccountNumber": "60234648962",
+      "payToAccountNumber": "43543543544",
+      "processingBank": "BANK_Z",
+      "counterpartyBank": "BANK_Z",
+      "description": "EXTERNAL_PAYMENT",
+      "amount": 50.00
+  }
+}
