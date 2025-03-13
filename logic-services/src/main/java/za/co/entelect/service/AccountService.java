@@ -8,6 +8,8 @@ import za.co.entelect.dto.Account;
 import za.co.entelect.entity.AccountEntity;
 import za.co.entelect.utility.Mapping;
 
+import java.util.List;
+
 @Service
 public class AccountService {
 
@@ -64,5 +66,12 @@ public class AccountService {
                 .orElseThrow(() -> new EntityNotFoundException("Account not found with number: " + accountNumber));
 
         return accountEntity;
+    }
+
+    public List<Account> findAccountsByCustomerId(Long customerId){
+        List<AccountEntity> accountEntities = accountRepository.findByCustomerId(customerId)
+                .orElseThrow(() -> new EntityNotFoundException("Accounts not found for customer: " + customerId));
+
+        return accountEntities.stream().map(Mapping::toAccount).toList();
     }
 }
