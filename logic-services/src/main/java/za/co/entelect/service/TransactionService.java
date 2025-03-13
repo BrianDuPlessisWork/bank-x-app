@@ -5,11 +5,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import za.co.entelect.AccountRepository;
 import za.co.entelect.CustomerRepository;
 import za.co.entelect.TransactionRepository;
 import za.co.entelect.dto.Account;
 import za.co.entelect.dto.Customer;
+import za.co.entelect.dto.MakeTransaction;
 import za.co.entelect.dto.Transaction;
 import za.co.entelect.entity.AccountEntity;
 import za.co.entelect.entity.CustomerEntity;
@@ -22,6 +24,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -96,8 +99,11 @@ public class TransactionService {
     }
 
     public AccountEntity createSavingsInterestTransaction(AccountEntity account){
-        final BigDecimal interestPercentage = BigDecimal.valueOf(0.5);
-        final BigDecimal interestAmount = (account.getBalance()).multiply(interestPercentage);
+        final BigDecimal interestAmount = calculateInterest(account.getBalance());
+
+        if (!(account.getAccountType()).equals("SAVINGS")){
+            throw new IllegalArgumentException("Only a savings account can occur interest");
+        }
 
         if((account.getBalance()).compareTo(BigDecimal.ZERO) < 1){
             return account;
@@ -132,23 +138,38 @@ public class TransactionService {
     }
 
     private BigDecimal calculateTransactionFee(BigDecimal amount){
-        final BigDecimal transactionFeePercentage = BigDecimal.valueOf(0.05);
+        final BigDecimal transactionFeePercentage = BigDecimal.valueOf(0.0005);
         return amount.multiply(transactionFeePercentage);
     }
 
-    public Transaction debitAccount(String accountNumber, Customer customer, BigDecimal amount, String processingBank, String counterpartyBank, String transactionReference, String transactionDescription) throws AccessDeniedException {
+    private BigDecimal calculateInterest(BigDecimal amount){
+        final BigDecimal interestPercentage = BigDecimal.valueOf(0.005);
+        return (amount).multiply(interestPercentage);
+    }
+
+    public Transaction debitAccount(String accountNumber, Customer customer, BigDecimal amount, String processingBank, String counterpartyBank, String transactionReference, String transactionDescription, boolean isExternalTransaction) throws AccessDeniedException {
         AccountEntity account = accountService.findAccountEntityByAccountNumber(accountNumber);
+        AccountEntity referenceAccount = accountService.findAccountEntityByAccountNumber(transactionReference);
 
         if (!account.getCustomer().getCustomerID().equals(customer.getCustomerID())) {
             throw new AccessDeniedException("The customer does not own the specified account");
         }
 
-        if ((account.getBalance().add(calculateTransactionFee(amount))).compareTo(amount) < 0) {
+        if ((account.getBalance()).compareTo(amount.add(calculateTransactionFee(amount))) < 0) {
             throw new IllegalArgumentException("Customer does not have sufficient balance for the transfer");
         }
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0){
             throw new IllegalArgumentException("Invalid amount supplied for debit transaction, please provide a valid amount");
+        }
+
+        if (((account.getAccountType()).equals("SAVINGS")) && isExternalTransaction) {
+            throw new IllegalArgumentException("Savings account transfers can only be handled internally");
+        }
+        else if ((account.getAccountType().equals("SAVINGS")) &&
+                (!referenceAccount.getAccountType().equals("CURRENT") ||
+                        referenceAccount.getCustomer().getCustomerID() != account.getCustomer().getCustomerID())) {
+            throw new IllegalArgumentException("Savings account can only transfer to accountholder's current account");
         }
 
         TransactionEntity transaction = new TransactionEntity();
@@ -168,12 +189,15 @@ public class TransactionService {
         accountService.updateAccount(account);
         notificationService.NotifyAccountHolder("R " + transaction.getAmount() + " has been debited from your account with account number: " + account.getAccountNumber() +
                 "\nTransaction description: " + transaction.getTransactionDescription() + "\nTransaction reference: " + transaction.getTransactionReference());
+        notificationService.NotifyAccountHolder("Transaction fee of R " + calculateTransactionFee(amount) + " has been debited from your account with account number: " + account.getAccountNumber());
 
         return Mapping.toTransaction(transaction);
     }
 
-    public Transaction creditAccount(String accountNumber, BigDecimal amount, String processingBank, String counterpartyBank, String transactionReference, String transactionDescription) {
+    public Transaction creditAccount(String accountNumber, BigDecimal amount, String processingBank, String counterpartyBank, String transactionReference,
+                                     String transactionDescription) {
         AccountEntity account = accountService.findAccountEntityByAccountNumber(accountNumber);
+        BigDecimal accountBalanceBeforeInterest = account.getBalance();
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0){
             throw new IllegalArgumentException("Invalid amount supplied for credit transaction, please provide a valid amount");
@@ -190,20 +214,39 @@ public class TransactionService {
         transaction.setCounterpartyBankName(counterpartyBank);
 
         account = addTransactionToAccount(account, transaction);
+
+        if ((account.getAccountType()).equals("SAVINGS")) {
+            account = createSavingsInterestTransaction(account);
+        }
         account.setBalance(account.getBalance().add(transaction.getAmount()));
 
         accountService.updateAccount(account);
         notificationService.NotifyAccountHolder("R " + transaction.getAmount() + " has been credited to your account with account number: " + account.getAccountNumber() +
                 "\nTransaction description: " + transaction.getTransactionDescription() + "\nTransaction reference: " + transaction.getTransactionReference());
+        if ((account.getAccountType()).equals("SAVINGS")) {
+            notificationService.NotifyAccountHolder("Savings interest of R " + calculateInterest(accountBalanceBeforeInterest) + " has been credited to your account with account number: " + account.getAccountNumber());;
+        }
 
         return Mapping.toTransaction(transaction);
     }
 
-    //    public Transaction processInternalTransaction(Long payFromAccountId, Long payToAccountId, BigDecimal amount, String description) {
+    @Transactional
+    private Transaction processInternalTransfer(MakeTransaction transactionDetails, Customer payingCustomer) throws AccessDeniedException {
+
+        Transaction debitTransaction = debitAccount(transactionDetails.getPayFromAccountNumber(), payingCustomer, transactionDetails.getAmount(), "BANK_X", "BANK_X",
+                transactionDetails.getPayToAccountNumber(), "INTERNAL_TRANSFER", false);
+        creditAccount(transactionDetails.getPayToAccountNumber(), transactionDetails.getAmount(), "BANK_X", "BANK_X",
+                transactionDetails.getPayFromAccountNumber(), "INTERNAL_TRANSFER");
+
+        return debitTransaction;
+    }
+
+//    public Transaction processInternalPayment() {
 //
 //    }
 
-    //notificationService.NotifyAccountHolder("Transaction fee of R " + transaction.getAmount() + " has been debited from your account with account number: " + account.getAccountNumber());
-    //notificationService.NotifyAccountHolder("Savings interest of R " + transaction.getAmount() + " has been credited to your account with account number: " + account.getAccountNumber());
+//    public Transaction processExternalPayment() {
+//
+//    }
 }
 
