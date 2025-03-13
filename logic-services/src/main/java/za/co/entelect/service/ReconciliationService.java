@@ -6,7 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import za.co.entelect.ReconciliationBatchRepository;
 import za.co.entelect.ReconciliationTransactionRepository;
+import za.co.entelect.dto.CreateReconciliationTransaction;
 import za.co.entelect.dto.ReconciliationTransaction;
+import za.co.entelect.dto.Transaction;
 import za.co.entelect.entity.AccountEntity;
 import za.co.entelect.entity.ReconciliationBatchEntity;
 import za.co.entelect.entity.ReconciliationTransactionEntity;
@@ -34,7 +36,7 @@ public class ReconciliationService {
     }
 
     public List<ReconciliationTransaction> captureReconciliationTransactions(
-            List<ReconciliationTransactionEntity> reconciliationTransactionEntityList, String processingBank){
+            List<Transaction> reconciliationTransactionEntityList, String processingBank){
         List<ReconciliationTransactionEntity> savedTransactionList = new ArrayList<>();
 
         ReconciliationBatchEntity reconciliationBatch = new ReconciliationBatchEntity();
@@ -42,7 +44,7 @@ public class ReconciliationService {
         reconciliationBatch.setSubmissionDate(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
         reconciliationBatch.setProcessingBank(processingBank);
         
-        for (ReconciliationTransactionEntity transaction : reconciliationTransactionEntityList){
+        for (Transaction transaction : reconciliationTransactionEntityList){
             ReconciliationTransactionEntity reconciliationTransaction = getReconciliationTransactionEntity(transaction, reconciliationBatch);
             savedTransactionList.add(reconciliationTransactionRepository.save(reconciliationTransaction));
         }
@@ -50,17 +52,16 @@ public class ReconciliationService {
         return savedTransactionList.stream().map(Mapping::toReconciliationTransaction).toList();
     }
 
-    private static ReconciliationTransactionEntity getReconciliationTransactionEntity(ReconciliationTransactionEntity transaction,
+    private static ReconciliationTransactionEntity getReconciliationTransactionEntity(Transaction transaction,
                                                                                       ReconciliationBatchEntity reconciliationBatch) {
         ReconciliationTransactionEntity reconciliationTransaction = new ReconciliationTransactionEntity();
         reconciliationTransaction.setReconciliationBatch(reconciliationBatch);
-        reconciliationTransaction.setAccountNumber(transaction.getAccountNumber());
-        reconciliationTransaction.setTransactionType(transaction.getAccountType());
-        reconciliationTransaction.setBranchCode(transaction.getBranchCode());
+        reconciliationTransaction.setAccountNumber(transaction.getAccount().getAccountNumber());
+        reconciliationTransaction.setTransactionType(transaction.getAccount().getAccountType());
+        reconciliationTransaction.setBranchCode(transaction.getAccount().getBranchCode());
         reconciliationTransaction.setTransactionReference(transaction.getTransactionReference());
         reconciliationTransaction.setTransactionType(transaction.getTransactionType());
         reconciliationTransaction.setCounterpartyBankName(transaction.getCounterpartyBankName());
-        reconciliationTransaction.setStatus(transaction.getStatus());
         return reconciliationTransaction;
     }
 
@@ -105,10 +106,11 @@ public class ReconciliationService {
         }
     }
 
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 45 21 * * *")
     public void executeReconciliation(){
         try{
             processReconciliationTransactions();
+            System.out.println("It works");
         } catch (RuntimeException e){
             throw new RuntimeException("Could not successfully execute scheduled reconciliation transaction processing", e);
         }

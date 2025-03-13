@@ -1,0 +1,35 @@
+meta {
+  name: captureReconciliationTransactions
+  type: http
+  seq: 9
+}
+
+post {
+  url: http://localhost:8080/api/reconciliations
+  body: json
+  auth: none
+}
+
+body:json {
+  [
+    {
+      "accountType": "",
+      "branchcCode": "",
+      "amount": 0,
+      "transactionReference": "",
+      "transactionType": "",
+      "transactionDate": "",
+      "counterpartyBankName": ""
+    },
+    {
+      "accountType": "",
+      "branchcCode": "",
+      "amount": 0,
+      "transactionReference": "",
+      "transactionType": "",
+      "transactionDate": "",
+      "counterpartyBankName": ""
+    }
+  ]
+  
+}

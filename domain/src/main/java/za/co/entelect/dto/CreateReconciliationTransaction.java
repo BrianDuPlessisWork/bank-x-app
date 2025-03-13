@@ -1,15 +1,14 @@
 package za.co.entelect.dto;
 
-import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-@Builder
-public class ReconciliationTransaction {
-    private Long reconciliationTransactionID;
+@NoArgsConstructor
+public class CreateReconciliationTransaction {
     private String accountNumber;
     private String accountType;
     private String branchCode;
@@ -18,5 +17,4 @@ public class ReconciliationTransaction {
     private String transactionType;
     private LocalDateTime transactionDate;
     private String counterpartyBankName;
-    private String status;
 }

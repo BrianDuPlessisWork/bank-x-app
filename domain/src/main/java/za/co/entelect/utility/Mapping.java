@@ -57,6 +57,19 @@ public class Mapping {
                 .build();
     }
 
+    public static ReconciliationTransaction toReconciliationTransactionFromCreate(CreateReconciliationTransaction entity) {
+        return ReconciliationTransaction.builder()
+                .accountNumber(entity.getAccountNumber())
+                .accountType(entity.getAccountType())
+                .branchCode(entity.getBranchCode())
+                .amount(entity.getAmount())
+                .transactionReference(entity.getTransactionReference())
+                .transactionType(entity.getTransactionType())
+                .transactionDate(entity.getTransactionDate())
+                .counterpartyBankName(entity.getCounterpartyBankName())
+                .build();
+    }
+
     public static AccountCustomer toAccountCustomer(CustomerEntity customerEntity){
         return AccountCustomer.builder()
                 .customerID(customerEntity.getCustomerID())

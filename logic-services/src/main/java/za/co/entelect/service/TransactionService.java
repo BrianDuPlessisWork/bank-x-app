@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import za.co.entelect.TransactionRepository;
 import za.co.entelect.dto.Account;
 import za.co.entelect.dto.Customer;
-import za.co.entelect.dto.MakeTransaction;
+import za.co.entelect.dto.CreateTransaction;
 import za.co.entelect.dto.Transaction;
 import za.co.entelect.entity.AccountEntity;
 import za.co.entelect.entity.TransactionEntity;
@@ -189,7 +189,7 @@ public class TransactionService {
         }
     }
 
-    private void validateTransactionDetails(MakeTransaction transactionDetails, Customer payingCustomer, boolean isPaymentToOtherCustomer, AccountEntity fromAccount, AccountEntity toAccount) throws AccessDeniedException {
+    private void validateTransactionDetails(CreateTransaction transactionDetails, Customer payingCustomer, boolean isPaymentToOtherCustomer, AccountEntity fromAccount, AccountEntity toAccount) throws AccessDeniedException {
         if (isPaymentToOtherCustomer) {
             validateOwnershipOfAccount(fromAccount, payingCustomer);
             validateAvailableBalance(fromAccount, transactionDetails.getAmount());
@@ -201,7 +201,7 @@ public class TransactionService {
         validateSavingAccountConstraints(fromAccount, toAccount, false);
     }
 
-    public Transaction debitAccount(MakeTransaction transactionDetails, AccountEntity account, LocalDateTime timestamp) {
+    public Transaction debitAccount(CreateTransaction transactionDetails, AccountEntity account, LocalDateTime timestamp) {
         TransactionEntity transaction = new TransactionEntity();
         transaction.setAccount(account);
         transaction.setTransactionType("DEBIT");
@@ -223,7 +223,7 @@ public class TransactionService {
         return Mapping.toTransaction(transaction);
     }
 
-    public Transaction creditAccount(MakeTransaction transactionDetails, AccountEntity account, LocalDateTime timestamp) {
+    public Transaction creditAccount(CreateTransaction transactionDetails, AccountEntity account, LocalDateTime timestamp) {
         TransactionEntity transaction = new TransactionEntity();
         transaction.setAccount(account);
         transaction.setTransactionType("CREDIT");
@@ -245,7 +245,7 @@ public class TransactionService {
         return Mapping.toTransaction(transaction);
     }
 
-    private Transaction processTransfer(MakeTransaction transactionDetails, Customer payingCustomer, boolean isPaymentToOtherCustomer)
+    private Transaction processTransfer(CreateTransaction transactionDetails, Customer payingCustomer, boolean isPaymentToOtherCustomer)
             throws AccessDeniedException {
 
         AccountEntity fromAccount = accountService.findAccountEntityByAccountNumber(transactionDetails.getPayFromAccountNumber());
@@ -276,7 +276,7 @@ public class TransactionService {
         }
     }
 
-    private boolean isDebitTransaction(MakeTransaction transactionDetails){
+    private boolean isDebitTransaction(CreateTransaction transactionDetails){
         Optional<AccountEntity> payFromAccount = findAccountSafely(
                 () -> accountService.findAccountEntityByAccountNumber(transactionDetails.getPayFromAccountNumber()));
 
@@ -295,17 +295,17 @@ public class TransactionService {
     }
 
     @Transactional
-    public Transaction processInternalTransfer(MakeTransaction transactionDetails, Customer payingCustomer) throws AccessDeniedException {
+    public Transaction processInternalTransfer(CreateTransaction transactionDetails, Customer payingCustomer) throws AccessDeniedException {
         return processTransfer(transactionDetails, payingCustomer, false);
     }
 
     @Transactional
-    public Transaction processInternalPayment(MakeTransaction transactionDetails, Customer payingCustomer) throws AccessDeniedException {
+    public Transaction processInternalPayment(CreateTransaction transactionDetails, Customer payingCustomer) throws AccessDeniedException {
         return processTransfer(transactionDetails, payingCustomer, true);
     }
 
     @Transactional
-    public Transaction processSingleExternalPayment(MakeTransaction transactionDetails, LocalDateTime timestamp) {
+    public Transaction processSingleExternalPayment(CreateTransaction transactionDetails, LocalDateTime timestamp) {
         Transaction returnTransaction;
         AccountEntity localAccount;
         boolean isDebitTransaction = isDebitTransaction(transactionDetails);
@@ -332,11 +332,11 @@ public class TransactionService {
     }
 
     @Transactional
-    public List<Transaction> processMultipleExternalPayments(List<MakeTransaction> transactionDetailList) {
+    public List<Transaction> processMultipleExternalPayments(List<CreateTransaction> transactionDetailList) {
         List<Transaction> returnTransactionList = new ArrayList<>();
         LocalDateTime timestamp = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
 
-        for (MakeTransaction transactionDetail: transactionDetailList){
+        for (CreateTransaction transactionDetail: transactionDetailList){
             returnTransactionList.add(processSingleExternalPayment(transactionDetail, timestamp));
         }
         return returnTransactionList;

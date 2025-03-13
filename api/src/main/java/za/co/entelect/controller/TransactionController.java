@@ -4,12 +4,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import za.co.entelect.dto.Customer;
-import za.co.entelect.dto.MakeTransaction;
+import za.co.entelect.dto.CreateTransaction;
 import za.co.entelect.dto.Transaction;
 import za.co.entelect.service.CustomerService;
 import za.co.entelect.service.TransactionService;
 
-import java.math.BigDecimal;
 import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -41,10 +40,10 @@ public class TransactionController {
     @PostMapping("/internal/transfer/{customerId}")
     public ResponseEntity<Transaction> transferBetweenInternalAccounts(
             @PathVariable(name= "customerId") Long customerId,
-            @RequestBody MakeTransaction makeTransactionDto) throws AccessDeniedException {
+            @RequestBody CreateTransaction createTransactionDto) throws AccessDeniedException {
 
         Customer customer = customerService.getCustomerByCustomerId(customerId);
-        Transaction transaction = transactionService.processInternalTransfer(makeTransactionDto, customer);
+        Transaction transaction = transactionService.processInternalTransfer(createTransactionDto, customer);
 
         return ResponseEntity.ok(transaction);
     }
@@ -52,25 +51,25 @@ public class TransactionController {
     @PostMapping("/internal/payment/{customerId}")
     public ResponseEntity<Transaction> makeInternalPayment (
             @PathVariable(name= "customerId") Long customerId,
-            @RequestBody MakeTransaction makeTransactionDto) throws AccessDeniedException {
+            @RequestBody CreateTransaction createTransactionDto) throws AccessDeniedException {
 
         Customer customer = customerService.getCustomerByCustomerId(customerId);
-        Transaction transaction = transactionService.processInternalPayment(makeTransactionDto, customer);
+        Transaction transaction = transactionService.processInternalPayment(createTransactionDto, customer);
 
         return ResponseEntity.ok(transaction);
     }
 
     @PostMapping("/external/payment/single")
-    public ResponseEntity<Transaction> makeSingleExternalPayment (@RequestBody MakeTransaction makeTransactionDto) {
+    public ResponseEntity<Transaction> makeSingleExternalPayment (@RequestBody CreateTransaction createTransactionDto) {
 
-        Transaction transaction = transactionService.processSingleExternalPayment(makeTransactionDto, LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
+        Transaction transaction = transactionService.processSingleExternalPayment(createTransactionDto, LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
         return ResponseEntity.ok(transaction);
     }
 
     @PostMapping("/external/payment/multiple")
-    public ResponseEntity<List<Transaction>> makeMultipleExternalPayment (@RequestBody List<MakeTransaction> makeTransactionDtoList) {
+    public ResponseEntity<List<Transaction>> makeMultipleExternalPayment (@RequestBody List<CreateTransaction> createTransactionDtoList) {
 
-        List<Transaction> transactionList = transactionService.processMultipleExternalPayments(makeTransactionDtoList);
+        List<Transaction> transactionList = transactionService.processMultipleExternalPayments(createTransactionDtoList);
         return ResponseEntity.ok(transactionList);
     }
 }
