@@ -90,6 +90,8 @@ public class TransactionService {
         account.setBalance(account.getBalance().subtract(transaction.getAmount()));
 
         accountService.updateAccount(account);
+        notificationService.NotifyAccountHolder("Transaction fee of R " + calculateTransactionFee(amount) +
+                " has been debited from your account with account number: " + account.getAccountNumber());
     }
 
     public void createSavingsInterestTransaction(AccountEntity account, LocalDateTime timestamp, BigDecimal accountBalance){
@@ -114,6 +116,8 @@ public class TransactionService {
             account.setBalance(account.getBalance().add(transaction.getAmount()));
 
             accountService.updateAccount(account);
+            notificationService.NotifyAccountHolder("Savings interest of R " + calculateInterest(accountBalance)
+                    + " has been credited to your account with account number: " + account.getAccountNumber());
         }
     }
 
@@ -207,6 +211,9 @@ public class TransactionService {
         account.setBalance(account.getBalance().subtract(transaction.getAmount()));
 
         accountService.updateAccount(account);
+        notificationService.NotifyAccountHolder("R " + transaction.getAmount() + " has been debited from your account with account number: "
+                + account.getAccountNumber() + "\nTransaction description: " + transaction.getTransactionDescription() +
+                "\nTransaction reference: " + transaction.getTransactionReference());
 
         return Mapping.toTransaction(transaction);
     }
@@ -226,6 +233,9 @@ public class TransactionService {
         account.setBalance(account.getBalance().add(transaction.getAmount()));
 
         accountService.updateAccount(account);
+        notificationService.NotifyAccountHolder("R " + transaction.getAmount() + " has been credited to your account with account number: "
+                + account.getAccountNumber() + "\nTransaction description: " + transaction.getTransactionDescription() +
+                "\nTransaction reference: " + transaction.getTransactionReference());
 
         return Mapping.toTransaction(transaction);
     }
@@ -295,8 +305,13 @@ public class TransactionService {
         AccountEntity localAccount;
         boolean isDebitTransaction = isDebitTransaction(transactionDetails);
 
+        validateAmount(transactionDetails.getAmount());
         if (isDebitTransaction){
             localAccount = accountService.findAccountEntityByAccountNumber(transactionDetails.getPayFromAccountNumber());
+
+            validateAvailableBalance(localAccount, transactionDetails.getAmount());
+            validateSavingAccountConstraints(localAccount, null, true);
+
             returnTransaction = debitAccount(transactionDetails, localAccount, timestamp);
             createTransactionFeesTransaction(localAccount, transactionDetails.getAmount());
         }
