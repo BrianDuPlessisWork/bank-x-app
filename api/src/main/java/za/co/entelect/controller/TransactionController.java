@@ -11,6 +11,8 @@ import za.co.entelect.service.TransactionService;
 
 import java.math.BigDecimal;
 import java.nio.file.AccessDeniedException;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @RestController
@@ -39,59 +41,36 @@ public class TransactionController {
     @PostMapping("/internal/transfer/{customerId}")
     public ResponseEntity<Transaction> transferBetweenInternalAccounts(
             @PathVariable(name= "customerId") Long customerId,
-            @RequestBody MakeTransaction makeTransactionDto) {
+            @RequestBody MakeTransaction makeTransactionDto) throws AccessDeniedException {
 
-        return ResponseEntity.ok(null);
+        Customer customer = customerService.getCustomerByCustomerId(customerId);
+        Transaction transaction = transactionService.processInternalTransfer(makeTransactionDto, customer);
+
+        return ResponseEntity.ok(transaction);
     }
 
     @PostMapping("/internal/payment/{customerId}")
     public ResponseEntity<Transaction> makeInternalPayment (
             @PathVariable(name= "customerId") Long customerId,
-            @RequestBody MakeTransaction makeTransactionDto) {
+            @RequestBody MakeTransaction makeTransactionDto) throws AccessDeniedException {
 
-        return ResponseEntity.ok(null);
+        Customer customer = customerService.getCustomerByCustomerId(customerId);
+        Transaction transaction = transactionService.processInternalPayment(makeTransactionDto, customer);
+
+        return ResponseEntity.ok(transaction);
     }
 
     @PostMapping("/external/payment/single")
     public ResponseEntity<Transaction> makeSingleExternalPayment (@RequestBody MakeTransaction makeTransactionDto) {
 
-        return ResponseEntity.ok(null);
+        Transaction transaction = transactionService.processSingleExternalPayment(makeTransactionDto, LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
+        return ResponseEntity.ok(transaction);
     }
 
     @PostMapping("/external/payment/multiple")
     public ResponseEntity<List<Transaction>> makeMultipleExternalPayment (@RequestBody List<MakeTransaction> makeTransactionDtoList) {
-        return ResponseEntity.ok(null);
+
+        List<Transaction> transactionList = transactionService.processMultipleExternalPayments(makeTransactionDtoList);
+        return ResponseEntity.ok(transactionList);
     }
 }
-
-//@PostMapping("/external/debit")
-//public ResponseEntity<Transaction> debitInternalAccount(
-//        @RequestParam(name= "customerId") Long customerId,
-//        @RequestParam(name= "payFromAccountNumber") String payFromAccountNumber,
-//        @RequestParam(name= "payToAccountNumber") String payToAccountNumber,
-//        @RequestParam(name= "amount") BigDecimal amount,
-//        @RequestParam(name= "processingBank") String processingBank,
-//        @RequestParam(name= "counterpartyBank") String counterpartyBank,
-//        @RequestParam(name= "TransactionDescription") String description) throws AccessDeniedException {
-//
-//    Customer payingCustomer = customerService.getCustomerByCustomerId(customerId);
-//    Transaction customerTransaction = transactionService.debitAccount(payFromAccountNumber, payingCustomer, amount,
-//            processingBank, counterpartyBank, payToAccountNumber, description, true);
-//
-//    return ResponseEntity.ok(customerTransaction);
-//}
-//
-//@PostMapping("/external/credit")
-//public ResponseEntity<Transaction> creditInternalAccount(
-//        @RequestParam(name= "payFromAccountNumber") String payFromAccountNumber,
-//        @RequestParam(name= "payToAccountNumber") String payToAccountNumber,
-//        @RequestParam(name= "amount") BigDecimal amount,
-//        @RequestParam(name= "processingBank") String processingBank,
-//        @RequestParam(name= "counterpartyBank") String counterpartyBank,
-//        @RequestParam(name= "TransactionDescription") String description) {
-//
-//    Transaction customerTransaction = transactionService.creditAccount(payToAccountNumber, amount,
-//            processingBank, counterpartyBank, payFromAccountNumber, description);
-//
-//    return ResponseEntity.ok(customerTransaction);
-//}

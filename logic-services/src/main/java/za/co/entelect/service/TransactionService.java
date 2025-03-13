@@ -1,20 +1,14 @@
 package za.co.entelect.service;
 
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import za.co.entelect.AccountRepository;
-import za.co.entelect.CustomerRepository;
 import za.co.entelect.TransactionRepository;
 import za.co.entelect.dto.Account;
 import za.co.entelect.dto.Customer;
 import za.co.entelect.dto.MakeTransaction;
 import za.co.entelect.dto.Transaction;
 import za.co.entelect.entity.AccountEntity;
-import za.co.entelect.entity.CustomerEntity;
 import za.co.entelect.entity.TransactionEntity;
 import za.co.entelect.utility.Mapping;
 
@@ -24,8 +18,8 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 @Service
 public class TransactionService {
@@ -75,7 +69,7 @@ public class TransactionService {
         return returnAccount;
     }
 
-    public AccountEntity createTransactionFeesTransaction(AccountEntity account, BigDecimal amount){
+    public void createTransactionFeesTransaction(AccountEntity account, BigDecimal amount){
         final BigDecimal transactionFee = calculateTransactionFee(amount);
 
         if(transactionFee.compareTo(account.getBalance()) > 0){
@@ -95,34 +89,32 @@ public class TransactionService {
         account = addTransactionToAccount(account, transaction);
         account.setBalance(account.getBalance().subtract(transaction.getAmount()));
 
-        return account;
+        accountService.updateAccount(account);
     }
 
-    public AccountEntity createSavingsInterestTransaction(AccountEntity account){
-        final BigDecimal interestAmount = calculateInterest(account.getBalance());
+    public void createSavingsInterestTransaction(AccountEntity account, LocalDateTime timestamp, BigDecimal accountBalance){
+        final BigDecimal interestAmount = calculateInterest(accountBalance);
 
         if (!(account.getAccountType()).equals("SAVINGS")){
             throw new IllegalArgumentException("Only a savings account can occur interest");
         }
 
-        if((account.getBalance()).compareTo(BigDecimal.ZERO) < 1){
-            return account;
+        if((account.getBalance()).compareTo(BigDecimal.ZERO) >= 1){
+            TransactionEntity transaction = new TransactionEntity();
+            transaction.setAccount(account);
+            transaction.setTransactionType("CREDIT");
+            transaction.setAmount(interestAmount);
+            transaction.setTransactionDescription("SAVINGS INTEREST");
+            transaction.setTransactionReference(account.getAccountNumber());
+            transaction.setTransactionDate(timestamp);
+            transaction.setProcessingBank("BANK_X");
+            transaction.setCounterpartyBankName("BANK_X");
+
+            account = addTransactionToAccount(account, transaction);
+            account.setBalance(account.getBalance().add(transaction.getAmount()));
+
+            accountService.updateAccount(account);
         }
-
-        TransactionEntity transaction = new TransactionEntity();
-        transaction.setAccount(account);
-        transaction.setTransactionType("CREDIT");
-        transaction.setAmount(interestAmount);
-        transaction.setTransactionDescription("SAVINGS INTEREST");
-        transaction.setTransactionReference(account.getAccountNumber());
-        transaction.setTransactionDate(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
-        transaction.setProcessingBank("BANK_X");
-        transaction.setCounterpartyBankName("BANK_X");
-
-        account = addTransactionToAccount(account, transaction);
-        account.setBalance(account.getBalance().add(transaction.getAmount()));
-
-        return account;
     }
 
     public AccountEntity addTransactionToAccount(AccountEntity account, TransactionEntity transaction){
@@ -147,106 +139,187 @@ public class TransactionService {
         return (amount).multiply(interestPercentage);
     }
 
-    public Transaction debitAccount(String accountNumber, Customer customer, BigDecimal amount, String processingBank, String counterpartyBank, String transactionReference, String transactionDescription, boolean isExternalTransaction) throws AccessDeniedException {
-        AccountEntity account = accountService.findAccountEntityByAccountNumber(accountNumber);
-        AccountEntity referenceAccount = accountService.findAccountEntityByAccountNumber(transactionReference);
+    public void validateOwnershipOfTransferAccounts(AccountEntity fromAccount, AccountEntity toAccount, Customer customer) throws AccessDeniedException {
+        if (!fromAccount.getCustomer().getCustomerID().equals(customer.getCustomerID()) || !toAccount.getCustomer().getCustomerID().equals(customer.getCustomerID())) {
+            throw new AccessDeniedException("The customer does not own the specified accounts");
+        }
+    }
 
-        if (!account.getCustomer().getCustomerID().equals(customer.getCustomerID())) {
+    public void validateOwnershipOfAccount(AccountEntity fromAccount, Customer customer) throws AccessDeniedException {
+        if (!fromAccount.getCustomer().getCustomerID().equals(customer.getCustomerID())) {
             throw new AccessDeniedException("The customer does not own the specified account");
         }
+    }
 
+    public void validateAvailableBalanceOfTransferAccount(AccountEntity account, BigDecimal amount){
+        if ((account.getBalance()).compareTo(amount) < 0) {
+            throw new IllegalArgumentException("Customer does not have sufficient balance for the transfer");
+        }
+    }
+
+    public void validateAvailableBalance(AccountEntity account, BigDecimal amount){
         if ((account.getBalance()).compareTo(amount.add(calculateTransactionFee(amount))) < 0) {
             throw new IllegalArgumentException("Customer does not have sufficient balance for the transfer");
         }
+    }
 
+    public void validateAmount(BigDecimal amount){
         if (amount.compareTo(BigDecimal.ZERO) <= 0){
-            throw new IllegalArgumentException("Invalid amount supplied for debit transaction, please provide a valid amount");
+            throw new IllegalArgumentException("Transaction can not be associated with a negative or zero amount, please provide a valid amount");
         }
+    }
 
-        if (((account.getAccountType()).equals("SAVINGS")) && isExternalTransaction) {
+    public void validateSavingAccountConstraints(AccountEntity fromAccount, AccountEntity toAccount, boolean isExternalTransaction){
+        if (((fromAccount.getAccountType()).equals("SAVINGS")) && isExternalTransaction) {
             throw new IllegalArgumentException("Savings account transfers can only be handled internally");
         }
-        else if ((account.getAccountType().equals("SAVINGS")) &&
-                (!referenceAccount.getAccountType().equals("CURRENT") ||
-                        referenceAccount.getCustomer().getCustomerID() != account.getCustomer().getCustomerID())) {
+        else if ((fromAccount.getAccountType().equals("SAVINGS")) &&
+                (!toAccount.getAccountType().equals("CURRENT") ||
+                        toAccount.getCustomer().getCustomerID() != fromAccount.getCustomer().getCustomerID())) {
             throw new IllegalArgumentException("Savings account can only transfer to accountholder's current account");
         }
+    }
 
+    private void validateTransactionDetails(MakeTransaction transactionDetails, Customer payingCustomer, boolean isPaymentToOtherCustomer, AccountEntity fromAccount, AccountEntity toAccount) throws AccessDeniedException {
+        if (isPaymentToOtherCustomer) {
+            validateOwnershipOfAccount(fromAccount, payingCustomer);
+            validateAvailableBalance(fromAccount, transactionDetails.getAmount());
+        } else {
+            validateOwnershipOfTransferAccounts(fromAccount, toAccount, payingCustomer);
+            validateAvailableBalanceOfTransferAccount(fromAccount, transactionDetails.getAmount());
+        }
+        validateAmount(transactionDetails.getAmount());
+        validateSavingAccountConstraints(fromAccount, toAccount, false);
+    }
+
+    public Transaction debitAccount(MakeTransaction transactionDetails, AccountEntity account, LocalDateTime timestamp) {
         TransactionEntity transaction = new TransactionEntity();
         transaction.setAccount(account);
         transaction.setTransactionType("DEBIT");
-        transaction.setAmount(amount);
-        transaction.setTransactionDescription(transactionDescription);
-        transaction.setTransactionReference(transactionReference);
-        transaction.setTransactionDate(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
-        transaction.setProcessingBank(processingBank);
-        transaction.setCounterpartyBankName(counterpartyBank);
+        transaction.setAmount(transactionDetails.getAmount());
+        transaction.setTransactionDescription(transactionDetails.getDescription());
+        transaction.setTransactionReference(transactionDetails.getPayToAccountNumber());
+        transaction.setTransactionDate(timestamp);
+        transaction.setProcessingBank(transactionDetails.getProcessingBank());
+        transaction.setCounterpartyBankName(transaction.getCounterpartyBankName());
 
         account = addTransactionToAccount(account, transaction);
         account.setBalance(account.getBalance().subtract(transaction.getAmount()));
-        account = createTransactionFeesTransaction(account, amount);
 
         accountService.updateAccount(account);
-        notificationService.NotifyAccountHolder("R " + transaction.getAmount() + " has been debited from your account with account number: " + account.getAccountNumber() +
-                "\nTransaction description: " + transaction.getTransactionDescription() + "\nTransaction reference: " + transaction.getTransactionReference());
-        notificationService.NotifyAccountHolder("Transaction fee of R " + calculateTransactionFee(amount) + " has been debited from your account with account number: " + account.getAccountNumber());
 
         return Mapping.toTransaction(transaction);
     }
 
-    public Transaction creditAccount(String accountNumber, BigDecimal amount, String processingBank, String counterpartyBank, String transactionReference,
-                                     String transactionDescription) {
-        AccountEntity account = accountService.findAccountEntityByAccountNumber(accountNumber);
-        BigDecimal accountBalanceBeforeInterest = account.getBalance();
-
-        if (amount.compareTo(BigDecimal.ZERO) <= 0){
-            throw new IllegalArgumentException("Invalid amount supplied for credit transaction, please provide a valid amount");
-        }
-
+    public Transaction creditAccount(MakeTransaction transactionDetails, AccountEntity account, LocalDateTime timestamp) {
         TransactionEntity transaction = new TransactionEntity();
         transaction.setAccount(account);
         transaction.setTransactionType("CREDIT");
-        transaction.setAmount(amount);
-        transaction.setTransactionDescription(transactionDescription);
-        transaction.setTransactionReference(transactionReference);
-        transaction.setTransactionDate(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
-        transaction.setProcessingBank(processingBank);
-        transaction.setCounterpartyBankName(counterpartyBank);
+        transaction.setAmount(transactionDetails.getAmount());
+        transaction.setTransactionDescription(transactionDetails.getDescription());
+        transaction.setTransactionReference(transactionDetails.getPayFromAccountNumber());
+        transaction.setTransactionDate(timestamp);
+        transaction.setProcessingBank(transactionDetails.getProcessingBank());
+        transaction.setCounterpartyBankName(transaction.getCounterpartyBankName());
 
         account = addTransactionToAccount(account, transaction);
-
-        if ((account.getAccountType()).equals("SAVINGS")) {
-            account = createSavingsInterestTransaction(account);
-        }
         account.setBalance(account.getBalance().add(transaction.getAmount()));
 
         accountService.updateAccount(account);
-        notificationService.NotifyAccountHolder("R " + transaction.getAmount() + " has been credited to your account with account number: " + account.getAccountNumber() +
-                "\nTransaction description: " + transaction.getTransactionDescription() + "\nTransaction reference: " + transaction.getTransactionReference());
-        if ((account.getAccountType()).equals("SAVINGS")) {
-            notificationService.NotifyAccountHolder("Savings interest of R " + calculateInterest(accountBalanceBeforeInterest) + " has been credited to your account with account number: " + account.getAccountNumber());;
-        }
 
         return Mapping.toTransaction(transaction);
     }
 
-    @Transactional
-    private Transaction processInternalTransfer(MakeTransaction transactionDetails, Customer payingCustomer) throws AccessDeniedException {
+    private Transaction processTransfer(MakeTransaction transactionDetails, Customer payingCustomer, boolean isPaymentToOtherCustomer)
+            throws AccessDeniedException {
 
-        Transaction debitTransaction = debitAccount(transactionDetails.getPayFromAccountNumber(), payingCustomer, transactionDetails.getAmount(), "BANK_X", "BANK_X",
-                transactionDetails.getPayToAccountNumber(), "INTERNAL_TRANSFER", false);
-        creditAccount(transactionDetails.getPayToAccountNumber(), transactionDetails.getAmount(), "BANK_X", "BANK_X",
-                transactionDetails.getPayFromAccountNumber(), "INTERNAL_TRANSFER");
+        AccountEntity fromAccount = accountService.findAccountEntityByAccountNumber(transactionDetails.getPayFromAccountNumber());
+        AccountEntity toAccount = accountService.findAccountEntityByAccountNumber(transactionDetails.getPayToAccountNumber());
+        BigDecimal toAccountBalanceBeforeTransaction = toAccount.getBalance();
+
+        LocalDateTime transactionTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        validateTransactionDetails(transactionDetails, payingCustomer, isPaymentToOtherCustomer, fromAccount, toAccount);
+
+        Transaction debitTransaction = debitAccount(transactionDetails, fromAccount, transactionTime);
+        creditAccount(transactionDetails, toAccount, transactionTime);
+
+        if (toAccount.getAccountType().equals("SAVINGS")) {
+            createSavingsInterestTransaction(toAccount, transactionTime, toAccountBalanceBeforeTransaction);
+        }
+        if (isPaymentToOtherCustomer) {
+            createTransactionFeesTransaction(fromAccount, transactionDetails.getAmount());
+        }
 
         return debitTransaction;
     }
 
-//    public Transaction processInternalPayment() {
-//
-//    }
+    private Optional<AccountEntity> findAccountSafely(Supplier<AccountEntity> accountSupplier) {
+        try {
+            return Optional.of(accountSupplier.get());
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
 
-//    public Transaction processExternalPayment() {
-//
-//    }
+    private boolean isDebitTransaction(MakeTransaction transactionDetails){
+        Optional<AccountEntity> payFromAccount = findAccountSafely(
+                () -> accountService.findAccountEntityByAccountNumber(transactionDetails.getPayFromAccountNumber()));
+
+        if (payFromAccount.isPresent()) {
+            return true;
+        } else {
+            Optional<AccountEntity> payToAccount = findAccountSafely(
+                    () -> accountService.findAccountEntityByAccountNumber(transactionDetails.getPayToAccountNumber()));
+
+            if (payToAccount.isPresent()) {
+                return false;
+            } else {
+                throw new IllegalArgumentException("None of the provided accounts are owned by Bank X");
+            }
+        }
+    }
+
+    @Transactional
+    public Transaction processInternalTransfer(MakeTransaction transactionDetails, Customer payingCustomer) throws AccessDeniedException {
+        return processTransfer(transactionDetails, payingCustomer, false);
+    }
+
+    @Transactional
+    public Transaction processInternalPayment(MakeTransaction transactionDetails, Customer payingCustomer) throws AccessDeniedException {
+        return processTransfer(transactionDetails, payingCustomer, true);
+    }
+
+    @Transactional
+    public Transaction processSingleExternalPayment(MakeTransaction transactionDetails, LocalDateTime timestamp) {
+        Transaction returnTransaction;
+        AccountEntity localAccount;
+        boolean isDebitTransaction = isDebitTransaction(transactionDetails);
+
+        if (isDebitTransaction){
+            localAccount = accountService.findAccountEntityByAccountNumber(transactionDetails.getPayFromAccountNumber());
+            returnTransaction = debitAccount(transactionDetails, localAccount, timestamp);
+            createTransactionFeesTransaction(localAccount, transactionDetails.getAmount());
+        }
+        else{
+            localAccount = accountService.findAccountEntityByAccountNumber(transactionDetails.getPayToAccountNumber());
+            BigDecimal accountBalance = localAccount.getBalance();
+            returnTransaction = creditAccount(transactionDetails, localAccount, timestamp);
+            if ((localAccount.getAccountType()).equals("SAVINGS")){
+                createSavingsInterestTransaction(localAccount, timestamp, accountBalance);
+            }
+        }
+        return returnTransaction;
+    }
+
+    @Transactional
+    public List<Transaction> processMultipleExternalPayments(List<MakeTransaction> transactionDetailList) {
+        List<Transaction> returnTransactionList = new ArrayList<>();
+        LocalDateTime timestamp = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+
+        for (MakeTransaction transactionDetail: transactionDetailList){
+            returnTransactionList.add(processSingleExternalPayment(transactionDetail, timestamp));
+        }
+        return returnTransactionList;
+    }
 }
 
