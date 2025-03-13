@@ -8,18 +8,20 @@ import za.co.entelect.entity.TransactionEntity;
 
 public class Mapping {
 
-    public static Transaction toTransaction(TransactionEntity transactionEntity){
-        return Transaction.builder()
-//                .transactionID(transactionEntity.getTransactionID())
-                .account(toTransactionAccount(transactionEntity.getAccount()))
-                .amount(transactionEntity.getAmount())
-                .transactionReference(transactionEntity.getTransactionReference())
-                .transactionDescription(transactionEntity.getTransactionDescription())
-                .transactionType(transactionEntity.getTransactionType())
-                .transactionDate(transactionEntity.getTransactionDate())
-                .counterpartyBankName(transactionEntity.getCounterpartyBankName())
-                .processingBank(transactionEntity.getProcessingBank())
-                .build();
+    public static Transaction toTransaction(TransactionEntity transactionEntity) {
+        Transaction transaction = new Transaction();
+
+        // transaction.setTransactionID(transactionEntity.getTransactionID());
+        transaction.setAccount(toTransactionAccount(transactionEntity.getAccount()));
+        transaction.setAmount(transactionEntity.getAmount());
+        transaction.setTransactionReference(transactionEntity.getTransactionReference());
+        transaction.setTransactionDescription(transactionEntity.getTransactionDescription());
+        transaction.setTransactionType(transactionEntity.getTransactionType());
+        transaction.setTransactionDate(transactionEntity.getTransactionDate());
+        transaction.setCounterpartyBankName(transactionEntity.getCounterpartyBankName());
+        transaction.setProcessingBank(transactionEntity.getProcessingBank());
+
+        return transaction;
     }
 
     public static Account toAccount(AccountEntity accountEntity){
