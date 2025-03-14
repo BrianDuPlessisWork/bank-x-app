@@ -28,9 +28,9 @@ public class TransactionController {
         this.customerService = customerService;
     }
 
-    @GetMapping("/{customerId}")
+    @GetMapping("/{accountNumber}/{customerId}")
     public ResponseEntity<List<Transaction>> getTransactionsByAccountNumber(
-            @RequestParam(name = "accountNumber") String accountNumber,
+            @PathVariable(name = "accountNumber") String accountNumber,
             @PathVariable(name = "customerId") Long customerID) throws AccessDeniedException {
 
         Customer customer = customerService.getCustomerByCustomerId(customerID);

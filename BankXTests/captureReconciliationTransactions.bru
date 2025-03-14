@@ -5,62 +5,62 @@ meta {
 }
 
 post {
-  url: http://localhost:8080/api/reconciliations?processingBank=BANK_Z
+  url: http://localhost:8080/api/reconciliations/BANK_Z
   body: json
   auth: none
 }
 
 params:query {
-  processingBank: BANK_Z
+  ~processingBank: BANK_Z
 }
 
 body:json {
   [
     {
-      "transactionID": 8,
+      "transactionID": 2,
       "account": {
-        "accountID": 2,
-        "accountNumber": "73936025548",
-        "accountType": "SAVINGS",
+        "accountID": 1,
+        "accountNumber": "45618659237",
+        "accountType": "CURRENT",
         "branchCode": "632005"
       },
       "amount": 1250.75,
       "transactionReference": "12345678901234",
       "transactionType": "CREDIT",
       "transactionDescription": "EXTERNAL_PAYMENT",
-      "transactionDate": "2025-03-14T07:10:40",
+      "transactionDate": "2025-03-14T15:35:12",
       "counterpartyBankName": "BANK_Z",
       "processingBank": "BANK_Z"
     },
     {
-      "transactionID": 10,
+      "transactionID": 3,
       "account": {
-        "accountID": 2,
-        "accountNumber": "73936025548",
-        "accountType": "SAVINGS",
+        "accountID": 1,
+        "accountNumber": "45618659237",
+        "accountType": "CURRENT",
         "branchCode": "632005"
       },
       "amount": 89.99,
       "transactionReference": "12345678901234",
       "transactionType": "CREDIT",
       "transactionDescription": "EXTERNAL_PAYMENT",
-      "transactionDate": "2025-03-14T07:10:40",
+      "transactionDate": "2025-03-14T15:35:12",
       "counterpartyBankName": "BANK_Z",
       "processingBank": "BANK_Z"
     },
     {
-      "transactionID": 12,
+      "transactionID": 4,
       "account": {
-        "accountID": 2,
-        "accountNumber": "73936025548",
-        "accountType": "SAVINGS",
+        "accountID": 1,
+        "accountNumber": "45618659237",
+        "accountType": "CURRENT",
         "branchCode": "632005"
       },
       "amount": 399.5,
       "transactionReference": "87654321098765",
       "transactionType": "CREDIT",
       "transactionDescription": "EXTERNAL_PAYMENT",
-      "transactionDate": "2025-03-14T07:10:40",
+      "transactionDate": "2025-03-14T15:35:12",
       "counterpartyBankName": "BANK_Z",
       "processingBank": "BANK_Z"
     }

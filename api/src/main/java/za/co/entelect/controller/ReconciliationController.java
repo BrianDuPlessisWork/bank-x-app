@@ -21,10 +21,10 @@ public class ReconciliationController {
         this.reconciliationService = reconciliationService;
     }
 
-    @PostMapping
+    @PostMapping("/{processingBank}")
     public ResponseEntity<List<ReconciliationTransaction>> captureReconciliationTransactions(
             @RequestBody List<Transaction> reconciliationTransactionList,
-            @RequestParam(name= "processingBank") String processingBank){
+            @PathVariable(name= "processingBank") String processingBank){
 
         List<ReconciliationTransaction> transactionList = reconciliationService.captureReconciliationTransactions(reconciliationTransactionList, processingBank);
         return ResponseEntity.status(HttpStatus.CREATED).body(transactionList);
