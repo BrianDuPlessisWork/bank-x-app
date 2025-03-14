@@ -28,8 +28,7 @@ public class CustomerController {
     @PostMapping("/onboard")
     public ResponseEntity<Customer> onboardCustomer(@RequestBody CustomerEntity customer) {
         Customer newCustomer = customerService.onboardCustomer(customer);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(newCustomer);
+        return ResponseEntity.status(HttpStatus.CREATED).body(newCustomer);
     }
 
     @GetMapping("/accounts/{customerId}")

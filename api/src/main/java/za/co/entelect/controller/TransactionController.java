@@ -1,6 +1,7 @@
 package za.co.entelect.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import za.co.entelect.dto.Customer;
@@ -27,10 +28,10 @@ public class TransactionController {
         this.customerService = customerService;
     }
 
-    @GetMapping
+    @GetMapping("/{customerId}")
     public ResponseEntity<List<Transaction>> getTransactionsByAccountNumber(
             @RequestParam(name = "accountNumber") String accountNumber,
-            @RequestParam(name = "customerID") Long customerID) throws AccessDeniedException {
+            @PathVariable(name = "customerId") Long customerID) throws AccessDeniedException {
 
         Customer customer = customerService.getCustomerByCustomerId(customerID);
         List<Transaction> transactionList = transactionService.getTransactionsByAccountNumber(accountNumber, customer);
@@ -45,7 +46,7 @@ public class TransactionController {
         Customer customer = customerService.getCustomerByCustomerId(customerId);
         Transaction transaction = transactionService.processInternalTransfer(createTransactionDto, customer);
 
-        return ResponseEntity.ok(transaction);
+        return ResponseEntity.status(HttpStatus.CREATED).body(transaction);
     }
 
     @PostMapping("/internal/payment/{customerId}")
@@ -56,20 +57,20 @@ public class TransactionController {
         Customer customer = customerService.getCustomerByCustomerId(customerId);
         Transaction transaction = transactionService.processInternalPayment(createTransactionDto, customer);
 
-        return ResponseEntity.ok(transaction);
+        return ResponseEntity.status(HttpStatus.CREATED).body(transaction);
     }
 
     @PostMapping("/external/payment/single")
     public ResponseEntity<Transaction> makeSingleExternalPayment (@RequestBody CreateTransaction createTransactionDto) {
 
         Transaction transaction = transactionService.processSingleExternalPayment(createTransactionDto, LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
-        return ResponseEntity.ok(transaction);
+        return ResponseEntity.status(HttpStatus.CREATED).body(transaction);
     }
 
     @PostMapping("/external/payment/multiple")
     public ResponseEntity<List<Transaction>> makeMultipleExternalPayment (@RequestBody List<CreateTransaction> createTransactionDtoList) {
 
         List<Transaction> transactionList = transactionService.processMultipleExternalPayments(createTransactionDtoList);
-        return ResponseEntity.ok(transactionList);
+        return ResponseEntity.status(HttpStatus.CREATED).body(transactionList);
     }
 }

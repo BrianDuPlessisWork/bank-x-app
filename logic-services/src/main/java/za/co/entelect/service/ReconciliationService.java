@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import za.co.entelect.ReconciliationBatchRepository;
 import za.co.entelect.ReconciliationTransactionRepository;
-import za.co.entelect.dto.CreateReconciliationTransaction;
 import za.co.entelect.dto.ReconciliationTransaction;
 import za.co.entelect.dto.Transaction;
 import za.co.entelect.entity.AccountEntity;
@@ -35,6 +34,7 @@ public class ReconciliationService {
         this.transactionService = transactionService;
     }
 
+    @Transactional
     public List<ReconciliationTransaction> captureReconciliationTransactions(
             List<Transaction> reconciliationTransactionEntityList, String processingBank){
         List<ReconciliationTransactionEntity> savedTransactionList = new ArrayList<>();
@@ -109,7 +109,7 @@ public class ReconciliationService {
         }
     }
 
-    @Scheduled(cron = "0 43 5 * * *")
+    @Scheduled(cron = "0 0 0 * * *")
     public void executeReconciliation(){
         try{
             processReconciliationTransactions();
