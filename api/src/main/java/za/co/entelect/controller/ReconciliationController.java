@@ -25,7 +25,7 @@ public class ReconciliationController {
     @PostMapping
     public ResponseEntity<List<ReconciliationTransaction>> captureReconciliationTransactions(
             @RequestBody List<Transaction> reconciliationTransactionList,
-            @RequestParam String processingBank){
+            @RequestParam(name= "processingBank") String processingBank){
 
         List<ReconciliationTransaction> transactionList = reconciliationService.captureReconciliationTransactions(reconciliationTransactionList, processingBank);
         return ResponseEntity.ok(transactionList);

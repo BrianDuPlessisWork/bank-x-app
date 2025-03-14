@@ -17,5 +17,8 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
     @Query("SELECT t FROM TransactionEntity t WHERE t.account.accountNumber = :accountNumber")
     List<TransactionEntity> findByAccountNumber(@Param("accountNumber") String accountNumber);
 
-    Optional<TransactionEntity> findByTransactionReference(String transactionReference);
+    Optional<TransactionEntity> findByTransactionReferenceAndTransactionDate(
+            String transactionReference,
+            LocalDateTime transactionDate
+    );
 }

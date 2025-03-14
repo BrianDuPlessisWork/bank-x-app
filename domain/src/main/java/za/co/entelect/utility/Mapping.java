@@ -11,7 +11,7 @@ public class Mapping {
     public static Transaction toTransaction(TransactionEntity transactionEntity) {
         Transaction transaction = new Transaction();
 
-        // transaction.setTransactionID(transactionEntity.getTransactionID());
+        transaction.setTransactionID(transactionEntity.getTransactionID());
         transaction.setAccount(toTransactionAccount(transactionEntity.getAccount()));
         transaction.setAmount(transactionEntity.getAmount());
         transaction.setTransactionReference(transactionEntity.getTransactionReference());
@@ -35,13 +35,14 @@ public class Mapping {
                 .build();
     }
 
-    public static TransactionAccount toTransactionAccount(AccountEntity accountEntity){
-        return TransactionAccount.builder()
-                .accountID(accountEntity.getAccountID())
-                .accountNumber(accountEntity.getAccountNumber())
-                .accountType(accountEntity.getAccountType())
-                .branchCode(accountEntity.getBranchCode())
-                .build();
+    public static TransactionAccount toTransactionAccount(AccountEntity accountEntity) {
+        TransactionAccount transactionAccount = new TransactionAccount();
+        transactionAccount.setAccountID(accountEntity.getAccountID());
+        transactionAccount.setAccountNumber(accountEntity.getAccountNumber());
+        transactionAccount.setAccountType(accountEntity.getAccountType());
+        transactionAccount.setBranchCode(accountEntity.getBranchCode());
+
+        return transactionAccount;
     }
 
     public static ReconciliationTransaction toReconciliationTransaction(ReconciliationTransactionEntity entity) {

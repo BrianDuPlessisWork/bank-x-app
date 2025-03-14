@@ -48,6 +48,7 @@ CREATE TABLE ReconciliationBatch (
 CREATE TABLE ReconciliationTransaction (
     reconciliationTransactionID INT AUTO_INCREMENT PRIMARY KEY,
     reconciliationBatchID INT,
+    transactionID INT,
     accountNumber VARCHAR(50),
     accountType VARCHAR(50),
     branchCode VARCHAR(50),
@@ -57,5 +58,6 @@ CREATE TABLE ReconciliationTransaction (
     transactionDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     counterpartyBankName VARCHAR(255),
     status VARCHAR(50),
+    FOREIGN KEY (transactionID) REFERENCES Transaction(transactionID),
     FOREIGN KEY (reconciliationBatchID) REFERENCES ReconciliationBatch(reconciliationBatchID) ON DELETE CASCADE
 );

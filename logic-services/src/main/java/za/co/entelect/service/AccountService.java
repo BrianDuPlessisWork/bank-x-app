@@ -38,7 +38,7 @@ public class AccountService {
         }
     }
 
-    public Account updateAccount(AccountEntity account){
+    public AccountEntity updateAccount(AccountEntity account){
         try {
             if (account == null) {
                 throw new IllegalArgumentException("Account entity cannot be null");
@@ -48,7 +48,7 @@ public class AccountService {
                     .orElseThrow(() -> new EntityNotFoundException("Cannot update non-existent account with ID: " + account.getAccountID()));
 
             AccountEntity accountEntity = accountRepository.save(account);
-            return Mapping.toAccount(accountEntity);
+            return accountEntity;
         } catch (Exception e) {
             throw new RuntimeException("Unexpected error occurred while updating account", e);
         }

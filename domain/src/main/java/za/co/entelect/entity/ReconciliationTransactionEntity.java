@@ -17,12 +17,15 @@ public class ReconciliationTransactionEntity {
     @Column(name = "reconciliationTransactionID")
     private Long reconciliationTransactionID;
 
-    @ManyToOne
-    @JoinColumn(name = "reconciliationBatchID", nullable = false)
+    @ManyToOne(cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "reconciliationBatchID")
     private ReconciliationBatchEntity reconciliationBatch;
 
     @Column(name = "accountNumber", nullable = false, length = 50)
     private String accountNumber;
+
+    @Column(name = "transactionID", nullable = false, length = 50)
+    private Long transactionID;
 
     @Column(name = "accountType", nullable = false, length = 50)
     private String accountType;
@@ -45,7 +48,7 @@ public class ReconciliationTransactionEntity {
     @Column(name = "counterpartyBankName", nullable = false, length = 255)
     private String counterpartyBankName;
 
-    @Column(name = "status", nullable = false, length = 50)
+    @Column(name = "status")
     private String status;
 }
 

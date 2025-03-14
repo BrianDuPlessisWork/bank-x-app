@@ -5,9 +5,13 @@ meta {
 }
 
 post {
-  url: http://localhost:8080/api/reconciliations
+  url: http://localhost:8080/api/reconciliations?processingBank=BANK_Z
   body: json
   auth: none
+}
+
+params:query {
+  processingBank: BANK_Z
 }
 
 body:json {
@@ -15,7 +19,7 @@ body:json {
     {
       "account": {
         "accountID": 3,
-        "accountNumber": "95498102230",
+        "accountNumber": "93408507823",
         "accountType": "CURRENT",
         "branchCode": "632005"
       },
@@ -23,14 +27,14 @@ body:json {
       "transactionReference": "12345678901234",
       "transactionType": "CREDIT",
       "transactionDescription": "EXTERNAL_PAYMENT",
-      "transactionDate": "2025-03-13T21:42:01",
+      "transactionDate": "2025-03-13T22:29:38",
       "counterpartyBankName": "BANK_Z",
       "processingBank": "BANK_Z"
     },
     {
       "account": {
         "accountID": 3,
-        "accountNumber": "95498102230",
+        "accountNumber": "93408507823",
         "accountType": "CURRENT",
         "branchCode": "632005"
       },
@@ -38,14 +42,14 @@ body:json {
       "transactionReference": "12345678901234",
       "transactionType": "CREDIT",
       "transactionDescription": "EXTERNAL_PAYMENT",
-      "transactionDate": "2025-03-13T21:42:01",
+      "transactionDate": "2025-03-13T22:29:38",
       "counterpartyBankName": "BANK_Z",
       "processingBank": "BANK_Z"
     },
     {
       "account": {
         "accountID": 3,
-        "accountNumber": "95498102230",
+        "accountNumber": "93408507823",
         "accountType": "CURRENT",
         "branchCode": "632005"
       },
@@ -53,7 +57,7 @@ body:json {
       "transactionReference": "87654321098765",
       "transactionType": "CREDIT",
       "transactionDescription": "EXTERNAL_PAYMENT",
-      "transactionDate": "2025-03-13T21:42:01",
+      "transactionDate": "2025-03-13T22:29:38",
       "counterpartyBankName": "BANK_Z",
       "processingBank": "BANK_Z"
     }

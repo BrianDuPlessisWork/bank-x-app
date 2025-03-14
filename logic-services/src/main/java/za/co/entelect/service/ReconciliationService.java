@@ -57,11 +57,14 @@ public class ReconciliationService {
         ReconciliationTransactionEntity reconciliationTransaction = new ReconciliationTransactionEntity();
         reconciliationTransaction.setReconciliationBatch(reconciliationBatch);
         reconciliationTransaction.setAccountNumber(transaction.getAccount().getAccountNumber());
-        reconciliationTransaction.setTransactionType(transaction.getAccount().getAccountType());
+        reconciliationTransaction.setAccountType(transaction.getAccount().getAccountType());
         reconciliationTransaction.setBranchCode(transaction.getAccount().getBranchCode());
         reconciliationTransaction.setTransactionReference(transaction.getTransactionReference());
         reconciliationTransaction.setTransactionType(transaction.getTransactionType());
         reconciliationTransaction.setCounterpartyBankName(transaction.getCounterpartyBankName());
+        reconciliationTransaction.setAmount(transaction.getAmount());
+        reconciliationTransaction.setTransactionDate(transaction.getTransactionDate());
+        reconciliationTransaction.setTransactionID(transaction.getTransactionID());
         return reconciliationTransaction;
     }
 
@@ -88,7 +91,7 @@ public class ReconciliationService {
 
                 for (ReconciliationTransactionEntity reconciliationTransaction : reconciliationTransactions) {
                     Optional<TransactionEntity> capturedTransaction =
-                            transactionService.findByTransactionReference(reconciliationTransaction.getTransactionReference());
+                            transactionService.findByTransactionId(reconciliationTransaction.getTransactionID());
 
                     if (capturedTransaction.isPresent()) {
                         TransactionEntity transaction = capturedTransaction.get();
@@ -106,11 +109,11 @@ public class ReconciliationService {
         }
     }
 
-    @Scheduled(cron = "0 45 21 * * *")
+    @Scheduled(cron = "0 43 5 * * *")
     public void executeReconciliation(){
         try{
             processReconciliationTransactions();
-            System.out.println("It works");
+            System.out.println("Scheduled reconciliation task completed!");
         } catch (RuntimeException e){
             throw new RuntimeException("Could not successfully execute scheduled reconciliation transaction processing", e);
         }

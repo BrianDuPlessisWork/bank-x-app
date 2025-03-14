@@ -18,6 +18,7 @@ import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -36,8 +37,8 @@ public class TransactionService {
         this.notificationService = notificationService;
     }
 
-    public Optional<TransactionEntity> findByTransactionReference(String transactionReference){
-        return transactionRepository.findByTransactionReference(transactionReference);
+    public Optional<TransactionEntity> findByTransactionId(Long transactionId){
+        return transactionRepository.findById(transactionId);
     }
 
     public List<Transaction> getTransactionsByAccountNumber(String accountNumber, Customer customer) throws AccessDeniedException {
@@ -68,7 +69,7 @@ public class TransactionService {
         account = addTransactionToAccount(account, transaction);
         account.setBalance(account.getBalance().add(transaction.getAmount()));
 
-        Account returnAccount = accountService.updateAccount(account);
+        Account returnAccount = (Mapping.toAccount(accountService.updateAccount(account)));
         notificationService.NotifyAccountHolder("Joining bonus of R " + transaction.getAmount() + " has been credited to to your account with account number: " + account.getAccountNumber());
 
         return returnAccount;
@@ -215,12 +216,21 @@ public class TransactionService {
         account = addTransactionToAccount(account, transaction);
         account.setBalance(account.getBalance().subtract(transaction.getAmount()));
 
-        accountService.updateAccount(account);
+        AccountEntity updatedAccount = accountService.updateAccount(account);
+
+        TransactionEntity savedTransaction = updatedAccount.getTransactions()
+                .stream()
+                .filter(t -> t.getTransactionDate().equals(timestamp) &&
+                        t.getAmount().equals(transactionDetails.getAmount()) &&
+                        t.getTransactionDescription().equals(transactionDetails.getDescription()))
+                .findFirst()
+                .orElse(transaction);
+
         notificationService.NotifyAccountHolder("R " + transaction.getAmount() + " has been debited from your account with account number: "
                 + account.getAccountNumber() + "\nTransaction description: " + transaction.getTransactionDescription() +
                 "\nTransaction reference: " + transaction.getTransactionReference());
 
-        return Mapping.toTransaction(transaction);
+        return Mapping.toTransaction(savedTransaction);
     }
 
     public Transaction creditAccount(CreateTransaction transactionDetails, AccountEntity account, LocalDateTime timestamp) {
@@ -237,12 +247,21 @@ public class TransactionService {
         account = addTransactionToAccount(account, transaction);
         account.setBalance(account.getBalance().add(transaction.getAmount()));
 
-        accountService.updateAccount(account);
+        AccountEntity updatedAccount = accountService.updateAccount(account);
+
+        TransactionEntity savedTransaction = updatedAccount.getTransactions()
+                .stream()
+                .filter(t -> t.getTransactionDate().equals(timestamp) &&
+                        t.getAmount().equals(transactionDetails.getAmount()) &&
+                        t.getTransactionDescription().equals(transactionDetails.getDescription()))
+                .findFirst()
+                .orElse(transaction);
+
         notificationService.NotifyAccountHolder("R " + transaction.getAmount() + " has been credited to your account with account number: "
                 + account.getAccountNumber() + "\nTransaction description: " + transaction.getTransactionDescription() +
                 "\nTransaction reference: " + transaction.getTransactionReference());
 
-        return Mapping.toTransaction(transaction);
+        return Mapping.toTransaction(savedTransaction);
     }
 
     private Transaction processTransfer(CreateTransaction transactionDetails, Customer payingCustomer, boolean isPaymentToOtherCustomer)
