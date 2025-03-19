@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import za.co.entelect.AccountRepository;
 import za.co.entelect.CustomerRepository;
+import za.co.entelect.annotation.testAnnotation;
 import za.co.entelect.dto.Account;
 import za.co.entelect.dto.Customer;
 import za.co.entelect.entity.AccountEntity;
@@ -29,6 +30,7 @@ public class CustomerService {
         this.transactionService = transactionService;
     }
 
+    @testAnnotation(input="test")
     public Customer onboardCustomer(CustomerEntity customer){
         CustomerEntity customerEntity = customerRepository.save(customer);
         AccountEntity currentAccount = createAccount(customerEntity, "CURRENT");
