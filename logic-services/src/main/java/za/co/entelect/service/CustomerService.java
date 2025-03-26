@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import za.co.entelect.AccountRepository;
 import za.co.entelect.CustomerRepository;
-import za.co.entelect.annotation.testAnnotation;
 import za.co.entelect.dto.Account;
 import za.co.entelect.dto.Customer;
 import za.co.entelect.entity.AccountEntity;
@@ -13,7 +12,6 @@ import za.co.entelect.entity.CustomerEntity;
 import za.co.entelect.utility.Mapping;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Random;
 
 @Service
@@ -30,7 +28,6 @@ public class CustomerService {
         this.transactionService = transactionService;
     }
 
-    @testAnnotation("test")
     public Customer onboardCustomer(CustomerEntity customer){
         CustomerEntity customerEntity = customerRepository.save(customer);
         AccountEntity currentAccount = createAccount(customerEntity, "CURRENT");
@@ -39,7 +36,7 @@ public class CustomerService {
         accountService.createNewAccount(currentAccount);
         accountService.createNewAccount(savingsAccount);
 
-        Account account = transactionService.createSignUpBonusTransaction(savingsAccount);
+        AccountEntity account = transactionService.createSignUpBonusTransaction(savingsAccount);
         if (account == null){
             throw new RuntimeException("Could not create the signup-bonus transaction");
         }

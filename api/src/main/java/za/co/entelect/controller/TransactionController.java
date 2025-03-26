@@ -8,6 +8,7 @@ import za.co.entelect.dto.Customer;
 import za.co.entelect.dto.CreateTransaction;
 import za.co.entelect.dto.Transaction;
 import za.co.entelect.service.CustomerService;
+import za.co.entelect.service.PaymentService;
 import za.co.entelect.service.TransactionService;
 
 import java.nio.file.AccessDeniedException;
@@ -21,11 +22,13 @@ public class TransactionController {
 
     private final TransactionService transactionService;
     private final CustomerService customerService;
+    private final PaymentService paymentService;
 
     @Autowired
-    public TransactionController(TransactionService transactionService, CustomerService customerService) {
+    public TransactionController(TransactionService transactionService, CustomerService customerService, PaymentService paymentService) {
         this.transactionService = transactionService;
         this.customerService = customerService;
+        this.paymentService = paymentService;
     }
 
     @GetMapping("/{accountNumber}/{customerId}")
@@ -44,7 +47,7 @@ public class TransactionController {
             @RequestBody CreateTransaction createTransactionDto) throws AccessDeniedException {
 
         Customer customer = customerService.getCustomerByCustomerId(customerId);
-        Transaction transaction = transactionService.processInternalTransfer(createTransactionDto, customer);
+        Transaction transaction = paymentService.processInternalTransfer(createTransactionDto, customer);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(transaction);
     }
@@ -55,7 +58,7 @@ public class TransactionController {
             @RequestBody CreateTransaction createTransactionDto) throws AccessDeniedException {
 
         Customer customer = customerService.getCustomerByCustomerId(customerId);
-        Transaction transaction = transactionService.processInternalPayment(createTransactionDto, customer);
+        Transaction transaction = paymentService.processInternalPayment(createTransactionDto, customer);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(transaction);
     }
@@ -63,14 +66,14 @@ public class TransactionController {
     @PostMapping("/external/payment/single")
     public ResponseEntity<Transaction> makeSingleExternalPayment (@RequestBody CreateTransaction createTransactionDto) {
 
-        Transaction transaction = transactionService.processSingleExternalPayment(createTransactionDto, LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
+        Transaction transaction = paymentService.callProcessSingleExternalPayment(createTransactionDto, LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
         return ResponseEntity.status(HttpStatus.CREATED).body(transaction);
     }
 
     @PostMapping("/external/payment/multiple")
     public ResponseEntity<List<Transaction>> makeMultipleExternalPayment (@RequestBody List<CreateTransaction> createTransactionDtoList) {
 
-        List<Transaction> transactionList = transactionService.processMultipleExternalPayments(createTransactionDtoList);
+        List<Transaction> transactionList = paymentService.processMultipleExternalPayments(createTransactionDtoList);
         return ResponseEntity.status(HttpStatus.CREATED).body(transactionList);
     }
 }
