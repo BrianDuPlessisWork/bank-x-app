@@ -30,7 +30,7 @@ public class CustomerService {
         this.transactionService = transactionService;
     }
 
-    @testAnnotation(input="test")
+    @testAnnotation("test")
     public Customer onboardCustomer(CustomerEntity customer){
         CustomerEntity customerEntity = customerRepository.save(customer);
         AccountEntity currentAccount = createAccount(customerEntity, "CURRENT");

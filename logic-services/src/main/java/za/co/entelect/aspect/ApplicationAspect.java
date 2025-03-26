@@ -1,5 +1,6 @@
 package za.co.entelect.aspect;
 
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
@@ -10,8 +11,8 @@ import za.co.entelect.entity.CustomerEntity;
 
 @Aspect
 @Component
+@Slf4j
 public class ApplicationAspect {
-
     @Pointcut("@annotation(za.co.entelect.annotation.testAnnotation)")
     public void executeAnnotated(){}
 
