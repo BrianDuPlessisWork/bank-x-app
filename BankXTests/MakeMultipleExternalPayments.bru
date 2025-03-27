@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: http://localhost:8080/api/transactions/external/payment/multiple
+  url: http://localhost:8000/api/transactions/external/payment/multiple
   body: json
   auth: none
 }
@@ -14,7 +14,7 @@ body:json {
   [
     {
       "payFromAccountNumber": "12345678901234",
-      "payToAccountNumber": "34614352150",
+      "payToAccountNumber": "76731246704",
       "processingBank": "BANK_Z",
       "counterpartyBank": "BANK_Z",
       "description": "EXTERNAL_PAYMENT",
@@ -22,7 +22,7 @@ body:json {
     },
     {
       "payFromAccountNumber": "12345678901234",
-      "payToAccountNumber": "34614352150",
+      "payToAccountNumber": "76731246704",
       "processingBank": "BANK_Z",
       "counterpartyBank": "BANK_Z",
       "description": "EXTERNAL_PAYMENT",
@@ -30,7 +30,7 @@ body:json {
     },
     {
       "payFromAccountNumber": "87654321098765",
-      "payToAccountNumber": "34614352150",
+      "payToAccountNumber": "76731246704",
       "processingBank": "BANK_Z",
       "counterpartyBank": "BANK_Z",
       "description": "EXTERNAL_PAYMENT",
